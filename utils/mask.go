@@ -10,12 +10,14 @@ import (
 type Mask struct {
 	defaultMask uint
 	masks       map[byte]uint
+	Size        int
 }
 
 // CreateMask is used to create a new mask
-func CreateMask(length int, value bool) Mask {
+func CreateMask(length int, value bool, size int) Mask {
 	var mask Mask
 	mask.masks = make(map[byte]uint)
+	mask.Size = size
 	var n uint
 	if value {
 		n = ^n
@@ -52,7 +54,14 @@ func Default(mask Mask) uint {
 // Display is TODO
 func Display(mask Mask) {
 	for key, value := range mask.masks {
-		fmt.Print(string(key), " ")
-		fmt.Printf("%05b\n", value)
+		fmt.Println(string(key), " -> ", getSTR(value, mask.Size))
 	}
+}
+
+func getSTR(n uint, size int) string {
+	bin := fmt.Sprintf("%b", n)
+	for len(bin) != size {
+		bin = "0" + bin
+	}
+	return bin
 }

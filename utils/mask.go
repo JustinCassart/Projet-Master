@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"math"
 )
 
 // Mask is a structure countening
@@ -20,9 +21,8 @@ func CreateMask(length int, value bool, size int) Mask {
 	mask.Size = size
 	var n uint
 	if value {
-		n = ^n
+		n = uint(math.Pow(2, float64(size))) - 1
 	}
-	n ^= n << uint(length)
 	mask.defaultMask = n
 	return mask
 }

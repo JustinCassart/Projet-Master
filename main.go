@@ -8,8 +8,8 @@ import (
 
 func compare(text string, pattern string, size int) {
 	fmt.Printf("Recherche de %s dans %s (taille max = %d)\n", pattern, text, size)
-	fmt.Printf("Occurrence trouvée par shiftand : %v\n", algo.Shiftand(text, pattern, size))
-	fmt.Printf("Occurrence trouvée par shiftand : %v\n\n", algo.Shiftor(text, pattern, size))
+	fmt.Printf("Occurrence trouvée par shiftand : %v\n", algo.ShiftAnd(text, pattern, size))
+	fmt.Printf("Occurrence trouvée par shiftand : %v\n\n", algo.ShiftOr(text, pattern, size))
 }
 
 func main() {

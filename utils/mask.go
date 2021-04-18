@@ -11,14 +11,14 @@ import (
 type Mask struct {
 	defaultMask uint
 	masks       map[byte]uint
-	Size        int
+	size        int
 }
 
 // CreateMask is used to create a new mask
-func CreateMask(length int, value bool, size int) Mask {
+func CreateMask(value bool, size int) Mask {
 	var mask Mask
 	mask.masks = make(map[byte]uint)
-	mask.Size = size
+	mask.size = size
 	var n uint
 	if value {
 		n = uint(math.Pow(2, float64(size))) - 1
@@ -27,19 +27,28 @@ func CreateMask(length int, value bool, size int) Mask {
 	return mask
 }
 
-// AddMask adds an entry
-func AddMask(mask Mask, key byte) {
+// Size returns the number of bits
+// used for each entry
+func (mask Mask) Size() int {
+	return mask.size
+}
+
+// SetNew adds a new entry for the given key
+// with the default mask as value
+func (mask Mask) SetNew(key byte) {
 	mask.masks[key] = mask.defaultMask
 }
 
-// Set changes value of an entry
-func Set(mask Mask, key byte, value uint) {
+// Set replaces the previous value
+// for the entry key
+// with the new value
+func (mask Mask) Set(key byte, value uint) {
 	mask.masks[key] = value
 }
 
 // Get returns the value of the entry
 // or the default mask if the entry doesn't exist
-func Get(mask Mask, key byte) uint {
+func (mask Mask) Get(key byte) uint {
 	if value, ok := mask.masks[key]; ok {
 		return value
 	}
@@ -47,14 +56,14 @@ func Get(mask Mask, key byte) uint {
 }
 
 // Default returns the default mask
-func Default(mask Mask) uint {
+func (mask Mask) Default() uint {
 	return mask.defaultMask
 }
 
 // Display is TODO
-func Display(mask Mask) {
+func (mask Mask) Display() {
 	for key, value := range mask.masks {
-		fmt.Println(string(key), " -> ", getSTR(value, mask.Size))
+		fmt.Println(string(key), " -> ", getSTR(value, mask.size))
 	}
 }
 

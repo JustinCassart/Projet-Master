@@ -5,17 +5,17 @@ import (
 	"stringmatching/utils"
 )
 
-func preproc1(pattern string) utils.Mask {
-	mask := utils.CreateMask(len(pattern), true, len(pattern))
+func PreShiftOr(pattern string) utils.Mask {
+	mask := utils.CreateMask(true, len(pattern))
 	for i := 0; i < len(pattern); i++ {
 		var value uint = 1 << i
-		value ^= utils.Get(mask, pattern[i])
-		utils.Set(mask, pattern[i], value)
+		value ^= mask.Get(pattern[i])
+		mask.Set(pattern[i], value)
 	}
 	return mask
 }
 
-func Shiftor(text string, pattern string, maxsize int) []int {
+func ShiftOr(text string, pattern string, maxsize int) []int {
 	// D'abord on calcule le nombre de sous-motifs nécessaire
 	// En fonction de la taille maximale
 	l := float64(len(pattern))
@@ -26,7 +26,7 @@ func Shiftor(text string, pattern string, maxsize int) []int {
 	index := 0
 	for i := 0; i < len(pattern); i += maxsize {
 		// On calcule chaque masque pour chaque sous-motif
-		mask := preproc1(pattern[i:int(math.Min(float64(i+maxsize), float64(len(pattern))))])
+		mask := PreShiftOr(pattern[i:int(math.Min(float64(i+maxsize), float64(len(pattern))))])
 		masks[index] = mask
 		index++
 	}
@@ -38,30 +38,30 @@ func Shiftor(text string, pattern string, maxsize int) []int {
 // le caractère lu dans le texte (char)
 // et l'état courant (state)
 func nextState1(mask utils.Mask, char byte, state uint) uint {
-	var reset uint = 1 << mask.Size
+	var reset uint = 1 << mask.Size()
 	state <<= 1 // Propagation valeur précédente
 	if state >= reset {
 		state ^= reset // Suppression du 1 propagé plus loin que la longueur du pattern (1111 << 1 = 1110)
 
 	}
-	state |= utils.Get(mask, char) // Comparaison avec la valeur courante du texte
+	state |= mask.Get(char) // Comparaison avec la valeur courante du texte
 	return state
 }
 
 // Shiftor is TODO
 func shiftor(masks []utils.Mask, text string) []int {
 	occ := []int{}
-	var d uint = utils.Default(masks[0])
-	var match uint = 1 << (masks[0].Size - 1)
+	var d uint = masks[0].Default()
+	var match uint = 1 << (masks[0].Size() - 1)
 	for i := 0; i < len(text); i++ {
 		d = nextState1(masks[0], text[i], d)
 		if d < match {
 			if len(masks) == 1 {
-				occ = append(occ, i-masks[0].Size+1)
+				occ = append(occ, i-masks[0].Size()+1)
 			} else {
-				check := checkocc1(masks, text, 1, i+1)
+				check := occand(masks, text, 1, i+1)
 				if check > 0 {
-					occ = append(occ, i-masks[0].Size+1)
+					occ = append(occ, i-masks[0].Size()+1)
 				}
 			}
 		}
@@ -72,7 +72,7 @@ func shiftor(masks []utils.Mask, text string) []int {
 // checkocc permet de vérifier si
 // lorsque le premier motif donne une occurrence
 // les autres motifs induisent aussi l'occurrence
-func checkocc1(masks []utils.Mask, text string, id int, begin int) int {
+func occand(masks []utils.Mask, text string, id int, begin int) int {
 	if begin >= len(text) {
 		return 0
 	}
@@ -82,9 +82,9 @@ func checkocc1(masks []utils.Mask, text string, id int, begin int) int {
 	// Alors le masque D de départ est 100
 	// Ainsi lors du décalage d >>= 1
 	// On aura bien 10
-	var d uint = utils.Default(masks[id])
-	var match uint = 1 << (masks[id].Size - 1)
-	for i := 0; i < masks[id].Size; i++ {
+	var d uint = masks[id].Default()
+	var match uint = 1 << (masks[id].Size() - 1)
+	for i := 0; i < masks[id].Size(); i++ {
 		begin += i
 		d = nextState1(masks[id], text[begin], d)
 		if d < match {
@@ -92,14 +92,14 @@ func checkocc1(masks []utils.Mask, text string, id int, begin int) int {
 				// Il reste encore des sous-motifs
 				// Il faut donc encore vérifier
 				// Qu'ils induisent bien une occurrence
-				sub := checkocc1(masks, text, id+1, begin+1)
+				sub := occand(masks, text, id+1, begin+1)
 				if sub == 0 {
 					// Aucune occurrence n'est trouvée
 					return 0
 				}
-				return sub + masks[id].Size
+				return sub + masks[id].Size()
 			}
-			return masks[id].Size
+			return masks[id].Size()
 		}
 	}
 	return 0

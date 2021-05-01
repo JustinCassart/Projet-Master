@@ -1,112 +1,216 @@
 package algo
 
 import (
-	"math"
+	"fmt"
 	"stringmatching/utils"
 )
 
-// preproc permet de créer le mask T
-// pour un motif donné
-func PreShiftAnd(pattern string) utils.Mask {
+// PreShiftOr creates the mask B for a pattern
+// such that its length is less or equal to 64
+// For example the mask for aaba is
+// B[a] = 1011
+// B[c] = 0010
+func preShiftAnd(pattern string) *utils.Mask {
 	mask := utils.CreateMask(false, len(pattern))
 	for i := 0; i < len(pattern); i++ {
-		var value uint = 1 << (len(pattern) - 1 - i)
+		var value uint = 1 << i
 		value |= mask.Get(pattern[i])
 		mask.Set(pattern[i], value)
 	}
 	return mask
 }
 
-// Shiftand permet de trouver toutes les occurrences
-// d'un motif pattern dans un texte text
-// La taille maximale du motif est donnée par maxsize
-func ShiftAnd(text string, pattern string, maxsize int) []int {
-	// D'abord on calcule le nombre de sous-motifs nécessaire
-	// En fonction de la taille maximale
-	l := float64(len(pattern))
-	m := float64(maxsize)
-	n := l / m
-	// On crée une liste pour les mask de chaque sous-motifs
-	masks := make([]utils.Mask, int(math.Ceil(n)))
-	index := 0
-	for i := 0; i < len(pattern); i += maxsize {
-		// On calcule chaque masque pour chaque sous-motif
-		mask := PreShiftAnd(pattern[i:int(math.Min(float64(i+maxsize), float64(len(pattern))))])
-		masks[index] = mask
-		index++
-	}
-	return mutliShiftAnd(masks, text)
+// PreShiftAnd computes the masks for the pattern
+// It returns a slice of mask
+// If the length of the pattern is less or equal than the size of a word
+// then the slice contains the single mask representing the pattern
+// otherwise, the slice contains the mask for each subpattern s
+// such tath the length of s is at most the size of a word
+func PreShiftAnd(pattern string) []*utils.Mask {
+	return utils.CreateMaskBy(preShiftAnd, pattern)
 }
 
-// occor permet de vérifier si
-// lorsque le premier motif donne une occurrence
-// les autres motifs induisent aussi l'occurrence
-func occor(masks []utils.Mask, text string, id int, begin int) int {
-	if begin >= len(text) {
-		return 0
-	}
-	// On a besoin d'un nouveau point de départ
-	// Suppons que le masque soit formé de deux bits
-	// Par exemple T[a] = 01 et T[b] = 10
-	// Alors le masque D de départ est 100
-	// Ainsi lors du décalage d >>= 1
-	// On aura bien 10
-	var d uint = 1 << masks[id].Size()
-	for i := 0; i < masks[id].Size(); i++ {
-		begin += i
-		d = nextState(masks[id], text[begin], d)
-		if (d & 1) != 0 {
-			if id != len(masks)-1 {
-				// Il reste encore des sous-motifs
-				// Il faut donc encore vérifier
-				// Qu'ils induisent bien une occurrence
-				sub := occor(masks, text, id+1, begin+1)
-				if sub == 0 {
-					// Aucune occurrence n'est trouvée
-					return 0
-				}
-				return sub + masks[id].Size()
-			}
-			return masks[id].Size()
-		}
-	}
-	return 0
-}
-
-// nextState permet de calculer l'état D suivant
-// selon le masque T utilisé (mask)
-// le caractère lu dans le texte (char)
-// et l'état courant (state)
-func nextState(mask utils.Mask, char byte, state uint) uint {
-	var reset uint = 1 << (mask.Size() - 1)
-	state >>= 1             // Propagation valeur précédente
-	state |= reset          // Ajout du 1 au début (0000 >> 1 = 1000)
-	state &= mask.Get(char) // Comparaison avec la valeur courante du texte
-	return state
-}
-
-// mutliShiftAnd est l'algorithme permettant
-// de vraiment trouver les occurrences
-func mutliShiftAnd(masks []utils.Mask, text string) []int {
-	occ := []int{} // liste contenant les positions des occurrences trouvées
-	var d uint     // le masque D initialisé à 0
+func ShiftAnd(text, pattern string) []int {
+	masks := PreShiftAnd(pattern)
+	occ := []int{}
+	var match uint = 1 << (masks[0].Size() - 1)
+	var d uint = 0
 	for i := 0; i < len(text); i++ {
-		d = nextState(masks[0], text[i], d)
-		if (d & 1) != 0 {
+		nextStateAnd(masks[0], text[i], &d)
+		if d&match != 0 {
+			fmt.Println("sub 1 ok")
 			if len(masks) == 1 {
-				// Le motif tient en un mot machine
 				occ = append(occ, i-masks[0].Size()+1)
 			} else {
-				// Dans le cas d'une occurrence
-				// Mais que plusieurs mots machines sont utilisés
-				// Il faut vérifier que les autres mots induisent
-				// Aussi une occurrence
-				check := occor(masks, text, 1, i+1)
-				if check > 0 {
-					// Une occurrence a bien été trouée
+				check := occand(masks, text, 1, i+1)
+				if check {
 					occ = append(occ, i-masks[0].Size()+1)
 				}
 			}
+		}
+	}
+	return occ
+}
+
+func nextStateAnd(mask *utils.Mask, char byte, state *uint) {
+	var max uint = 1 << mask.Size()
+	*state <<= 1
+	if *state >= max {
+		*state ^= max
+	}
+	*state |= 1
+	*state &= mask.Get(char)
+}
+
+func occand(masks []*utils.Mask, text string, id, begin int) bool {
+	if begin >= len(text) {
+		return false
+	}
+	var d uint = 0
+	var match uint = 1 << (masks[id].Size() - 1)
+	for i := 0; i < masks[id].Size(); i++ {
+		if begin+i >= len(text) {
+			return false
+		}
+		nextStateAnd(masks[id], text[begin+i], &d)
+		if d&match != 0 {
+			if id != len(masks)-1 {
+				sub := occand(masks, text, id+1, begin+i+1)
+				if !sub {
+					return false
+				}
+			}
+			return true
+		}
+	}
+	return false
+}
+
+// PreMultiShiftAnd compute the init set
+// and the match set such that if we have a set
+// P = {P1, P2, ..., Pr} of patterns
+// we have init = 0^{mr-1}1 ... 0^{m2-1}1 0^{m1-1}1
+// where mr is the size of the rth pattern
+// reset = 10^{mr-1} ... 10^{m2-1} 10^{m1-1}
+func PreMutliShiftAnd(sizes *[]int, init, match, d *uint) {
+	for _, size := range *sizes {
+		*init += 1 << *d
+		*d += uint(size)
+		*match += 1 << (*d - 1)
+	}
+}
+
+func nextStateMultiAnd(mask *utils.Mask, state, init *uint, char byte) {
+	var max uint = 1 << mask.Size()
+	*state <<= 1
+	if *state >= max {
+		*state ^= max
+	}
+	*state |= *init
+	*state &= mask.Get(char)
+}
+
+// MultiShiftAnd performs the ShiftAnd string matching algorithm
+// for a set of patterns
+func MultiShiftAnd(text string, patterns []string) [][]int {
+	bigPattern := ""
+	sizes := make([]int, len(patterns))
+	for i, pattern := range patterns {
+		bigPattern += pattern
+		sizes[i] = len(pattern)
+	}
+	masks := PreShiftAnd(bigPattern)
+	var init uint  // give where begin a pattern in the concatenation
+	var match uint // tel if a pattern match
+	var d uint     // shift used to construct the init and match sets
+	PreMutliShiftAnd(&sizes, &init, &match, &d)
+	var state uint                      // state
+	occ := make([][]int, len(patterns)) // occurrences found for each pattern
+	for i := 0; i < len(text); i++ {
+		nextStateMultiAnd(masks[0], &state, &init, text[i])
+		if state&match != 0 {
+			s := 0
+			for pos, size := range sizes {
+				s += size
+				if state&(1<<(s-1)) != 0 {
+					occ[pos] = append(occ[pos], i-int(d)+1)
+				}
+			}
+		}
+	}
+	return occ
+}
+
+func extendedShiftAnd(pattern string, size int, i *int, mask *utils.Mask) {
+	for pattern[*i] != ']' {
+		if pattern[*i] == '-' {
+			fmt.Printf("begin : %c, end : %c\n", pattern[*i-1], pattern[*i+1])
+			begin := pattern[*i-1] + 1
+			end := pattern[*i+1]
+			for c := begin; c <= end; c++ {
+				fmt.Printf("c : %c\n", c)
+				var value uint = 1 << size
+				value |= mask.Get(c)
+				mask.Set(c, value)
+			}
+			*i += 2
+			break
+		}
+		var value uint = 1 << size
+		value |= mask.Get(pattern[*i])
+		mask.Set(pattern[*i], value)
+		*i += 1
+	}
+}
+
+func gapsShiftAnd(pattern *string, i, initGap, endGap *int, mask *utils.Mask) {
+
+}
+
+func PreExtendedShiftAnd(pattern *string, initGap, endGap *int) *utils.Mask {
+	mask := utils.CreateMask(false, 0)
+	size := 0
+	for i := 0; i < len(*pattern); i++ {
+		if (*pattern)[i] == '[' {
+			// class of symboles
+			i += 1
+			extendedShiftAnd(*pattern, size, &i, mask)
+		} else if (*pattern)[i] == 'x' && (*pattern)[i+1] == '(' {
+			// gaps
+
+		} else {
+			// simple symbole
+			var value uint = 1 << size
+			value |= mask.Get((*pattern)[i])
+			mask.Set((*pattern)[i], value)
+		}
+		size += 1
+	}
+	mask.Resize(size)
+	return mask
+}
+
+// func ExtendedShiftAnd(text, pattern string) {
+// 	var initGap, endGap int
+// 	mask := PreExtendedShiftAnd(&pattern, &initGap, &endGap)
+// }
+
+func PreShiftAndMultiMask(pattern string) *utils.MultiMask {
+	return utils.CreateMultiMaskBy(preShiftAnd, pattern)
+}
+
+func ShiftAndMultiMask(text, pattern string) []int {
+	occ := []int{}
+	mask := PreShiftAndMultiMask(pattern)
+	d := *mask.Default()
+	var match uint = 1 << ((*mask.Size())[0] - 1)
+	for i := 0; i < len(text); i++ {
+		utils.ArrayShift(&d, mask.Size())
+		utils.ArrayOp(&d, mask.Get(text[i]), func(array1, array2 *[]uint, i int) uint {
+			return (*array1)[i] & (*array2)[i]
+		})
+		if d[0]&match != 0 {
+			occ = append(occ, i-len(pattern)+1)
 		}
 	}
 	return occ

@@ -38,7 +38,6 @@ func ShiftAnd(text, pattern string) []int {
 	for i := 0; i < len(text); i++ {
 		nextStateAnd(masks[0], text[i], &d)
 		if d&match != 0 {
-			fmt.Println("sub 1 ok")
 			if len(masks) == 1 {
 				occ = append(occ, i-masks[0].Size()+1)
 			} else {
@@ -53,13 +52,7 @@ func ShiftAnd(text, pattern string) []int {
 }
 
 func nextStateAnd(mask *utils.Mask, char byte, state *uint) {
-	var max uint = 1 << mask.Size()
-	*state <<= 1
-	if *state >= max {
-		*state ^= max
-	}
-	*state |= 1
-	*state &= mask.Get(char)
+	*state = ((*state << 1) | 1) & mask.Get(char)
 }
 
 func occand(masks []*utils.Mask, text string, id, begin int) bool {
@@ -133,7 +126,7 @@ func MultiShiftAnd(text string, patterns []string) [][]int {
 			for pos, size := range sizes {
 				s += size
 				if state&(1<<(s-1)) != 0 {
-					occ[pos] = append(occ[pos], i-int(d)+1)
+					occ[pos] = append(occ[pos], i-size+1)
 				}
 			}
 		}
@@ -202,13 +195,13 @@ func PreShiftAndMultiMask(pattern string) *utils.MultiMask {
 func ShiftAndMultiMask(text, pattern string) []int {
 	occ := []int{}
 	mask := PreShiftAndMultiMask(pattern)
-	d := *mask.Default()
-	var match uint = 1 << ((*mask.Size())[0] - 1)
+	d := make([]uint, len(mask.Sizes()))
+	var match uint = 1 << ((mask.Sizes())[0] - 1)
 	for i := 0; i < len(text); i++ {
-		utils.ArrayShift(&d, mask.Size())
-		utils.ArrayOp(&d, mask.Get(text[i]), func(array1, array2 *[]uint, i int) uint {
-			return (*array1)[i] & (*array2)[i]
-		})
+		utils.ArrayShift(d, mask.Sizes())
+		utils.ArrayOp(func(i int, arrays ...[]uint) uint {
+			return arrays[0][i] & arrays[1][i]
+		}, d, mask.Get(text[i]))
 		if d[0]&match != 0 {
 			occ = append(occ, i-len(pattern)+1)
 		}

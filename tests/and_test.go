@@ -52,6 +52,17 @@ func TestBigShiftAnd(t *testing.T) {
 	CheckSlice(t, expected, current)
 }
 
+func BenchmarkBigShitAnd(b *testing.B) {
+	pattern := "abbaabba"
+	for len(pattern) < 128 {
+		pattern += "abbaabba"
+	}
+	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAnd(text, pattern)
+	}
+}
+
 func TestPreMultiShiftAnd(t *testing.T) {
 	sizes := []int{4, 3, 2, 5}
 	var init, match, d uint
@@ -76,7 +87,7 @@ func TestPreMultiMask(t *testing.T) {
 	pattern := "abba"
 	current := algo.PreShiftAndMultiMask(pattern)
 	expectedSize := []int{4}
-	CheckSlice(t, expectedSize, *current.Size())
+	CheckSlice(t, expectedSize, current.Sizes())
 	expectedKeys := []byte{'a', 'b'}
 	currentKeys := current.Keys()
 	utils.SortSlice(currentKeys)
@@ -99,7 +110,7 @@ func TestPreMultiMaskShiftAnd64(t *testing.T) {
 	}
 	current := algo.PreShiftAndMultiMask(pattern)
 	expectedSizes := []int{4, 64}
-	CheckSlice(t, expectedSizes, *current.Size())
+	CheckSlice(t, expectedSizes, current.Sizes())
 	expectedKeys := []byte{'a', 'b'}
 	currentKeys := current.Keys()
 	utils.SortSlice(currentKeys)
@@ -107,8 +118,8 @@ func TestPreMultiMaskShiftAnd64(t *testing.T) {
 		t.Errorf("Size error : Expected %d keys but found %d", len(expectedKeys), len(currentKeys))
 	}
 	expectedValues := make(map[byte][]uint)
-	expectedValues['a'] = []uint{13527612320720337851, 11}
-	expectedValues['b'] = []uint{4919131752989213764, 4}
+	expectedValues['a'] = []uint{11, 13527612320720337851}
+	expectedValues['b'] = []uint{4, 4919131752989213764}
 	for key, value := range expectedValues {
 		CheckSlice(t, value, current.Get(key))
 	}
@@ -131,6 +142,17 @@ func TestBigShiftAndMultiMask(t *testing.T) {
 	current := algo.ShiftAndMultiMask(text, pattern)
 	expected := []int{0}
 	CheckSlice(t, expected, current)
+}
+
+func BenchmarkBigShiftAndMultiMask(b *testing.B) {
+	pattern := "abbaabba"
+	for len(pattern) < 128 {
+		pattern += "abbaabba"
+	}
+	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAndMultiMask(text, pattern)
+	}
 }
 
 // func TestPreClassesShiftAnd(t *testing.T) {

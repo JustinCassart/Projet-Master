@@ -32,6 +32,14 @@ func (s super) keys() []int {
 	return keys
 }
 
+func set(array []int, pos int, value int) {
+	array[pos] = value
+}
+
+func app(array []int, value int) {
+	array = append(array, value)
+}
+
 func showType(inter interface{}) {
 	data := reflect.ValueOf(inter)
 	fmt.Println(data.Kind())
@@ -56,6 +64,14 @@ func check(inter1, inter2 interface{}) bool {
 		}
 	}
 	return true
+}
+
+func sum(nums ...int) int {
+	total := 0
+	for _, num := range nums {
+		total += num
+	}
+	return total
 }
 
 func main() {
@@ -87,9 +103,23 @@ func main() {
 	// fmt.Println(s.keys())
 	// fmt.Println(i1.keys())
 	// fmt.Println(i2.keys())
-	s1 := []int{1, 2}
-	s2 := []int{1, 2}
-	s3 := []int{2, 1}
-	fmt.Println(check(s1, s2))
-	fmt.Println(check(s1, s3))
+	// s1 := []int{1, 2}
+	// s2 := []int{1, 2}
+	// s3 := []int{2, 1}
+	// fmt.Println(check(s1, s2))
+	// fmt.Println(check(s1, s3))
+	arr := make([]int, 5)
+	set(arr, 3, 25)
+	fmt.Println(arr)
+	app(arr, 45)
+	fmt.Println(arr)
+	nums := []int{1, 2, 3}
+	fmt.Println(sum(nums...))
+	fmt.Println(sum(1, 2, 3))
+	var x uint = 1<<64 - 1
+	fmt.Printf("%b\n", x)
+	fmt.Printf("%b\n", (x<<1)|1)
+	var y uint = 1 << 63
+	fmt.Printf("%b\n", y)
+	fmt.Printf("%b\n", y<<1)
 }

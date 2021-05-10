@@ -22,7 +22,7 @@ func CheckSlice(t *testing.T, expected, current interface{}) {
 		expectedValue := expectedSlice.Index(i).Interface()
 		currentValue := currentSlice.Index(i).Interface()
 		if currentValue != expectedValue {
-			t.Errorf("Arguments %d differ : expected %d but found %d", i, expectedValue, currentValue)
+			t.Errorf("Arguments %d differ : expected %b but found %b", i, expectedValue, currentValue)
 		}
 	}
 }

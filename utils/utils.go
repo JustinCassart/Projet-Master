@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/bits"
+	"math/rand"
 	"reflect"
 	"sort"
 )
@@ -48,26 +49,32 @@ func SortSlice(array interface{}) {
 // 	}
 // }
 
-func ArrayShift(array []uint, sizes []int) {
+func ArrayShift(array []uint, size int) {
 	for i := 0; i < len(array); i++ {
+		var max uint = 1 << size
 		state := array[i]
-		var max uint = 1 << sizes[i]
 		state <<= 1
-		if sizes[i] < bits.UintSize {
+		if i == 0 {
+			// We must check if the size of the state
+			// overflows the number of bits (size)
+			// No report is needed
 			if state >= max {
-				state = state ^ max
-				if i != 0 {
-					array[i-1] |= 1
-				}
+				// It's work when the size is equal to
+				// the one of a computer word too.
+				// Because in this cas max is 0.
+				// So we xor with 0
+				state ^= max
 			}
 		} else {
+			// By definition the size of internal word are
+			// equal to the one of a computer word
 			if array[i] >= 1<<(bits.UintSize-1) {
-				if i != 0 {
-					array[i-1] |= 1
-				}
+				array[i-1] |= 1
 			}
 		}
 		if i == len(array)-1 {
+			// We add one in the last position
+			// to do the suppposition of a new occurrence.
 			state |= 1
 		}
 		array[i] = state
@@ -100,4 +107,26 @@ func ArrayOp(operation func(i int, arrays ...[]uint) uint, arrays ...[]uint) {
 
 func NSubPattern(pattern *string) int {
 	return int(math.Ceil(float64(len(*pattern)) / bits.UintSize))
+}
+
+// WordGenerator generates a word of size s with
+// the symboles of a given alphabet
+func WordGenerator(alphabet []byte, s int) string {
+	word := ""
+	for len(word) != s {
+		i := rand.Int() % len(alphabet)
+		word += string(alphabet[i])
+	}
+	return word
+}
+
+func AlpahbetGenerator(s int) []byte {
+	alphabet := make([]byte, s)
+	pos, sig := 0, byte('a')
+	for pos < s {
+		alphabet[pos] = sig
+		sig += 1
+		pos += 1
+	}
+	return alphabet
 }

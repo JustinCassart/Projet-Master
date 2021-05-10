@@ -2,6 +2,8 @@ package algo
 
 import (
 	"fmt"
+	"math"
+	"math/bits"
 	"stringmatching/utils"
 )
 
@@ -41,8 +43,7 @@ func ShiftAnd(text, pattern string) []int {
 			if len(masks) == 1 {
 				occ = append(occ, i-masks[0].Size()+1)
 			} else {
-				check := occand(masks, text, 1, i+1)
-				if check {
+				if occand(masks, &text, 1, i+1) {
 					occ = append(occ, i-masks[0].Size()+1)
 				}
 			}
@@ -55,23 +56,23 @@ func nextStateAnd(mask *utils.Mask, char byte, state *uint) {
 	*state = ((*state << 1) | 1) & mask.Get(char)
 }
 
-func occand(masks []*utils.Mask, text string, id, begin int) bool {
-	if begin >= len(text) {
+func occand(masks []*utils.Mask, text *string, id, begin int) bool {
+	if begin >= len(*text) {
 		return false
 	}
 	var d uint = 0
 	var match uint = 1 << (masks[id].Size() - 1)
 	for i := 0; i < masks[id].Size(); i++ {
-		if begin+i >= len(text) {
+		if begin+i >= len(*text) {
 			return false
 		}
-		nextStateAnd(masks[id], text[begin+i], &d)
+		if masks[id].Get((*text)[begin+i]) == 0 {
+			return false
+		}
+		nextStateAnd(masks[id], (*text)[begin+i], &d)
 		if d&match != 0 {
 			if id != len(masks)-1 {
-				sub := occand(masks, text, id+1, begin+i+1)
-				if !sub {
-					return false
-				}
+				return occand(masks, text, id+1, begin+i+1)
 			}
 			return true
 		}
@@ -156,9 +157,9 @@ func extendedShiftAnd(pattern string, size int, i *int, mask *utils.Mask) {
 	}
 }
 
-func gapsShiftAnd(pattern *string, i, initGap, endGap *int, mask *utils.Mask) {
+// func gapsShiftAnd(pattern *string, i, initGap, endGap *int, mask *utils.Mask) {
 
-}
+// }
 
 func PreExtendedShiftAnd(pattern *string, initGap, endGap *int) *utils.Mask {
 	mask := utils.CreateMask(false, 0)
@@ -188,17 +189,36 @@ func PreExtendedShiftAnd(pattern *string, initGap, endGap *int) *utils.Mask {
 // 	mask := PreExtendedShiftAnd(&pattern, &initGap, &endGap)
 // }
 
-func PreShiftAndMultiMask(pattern string) *utils.MultiMask {
-	return utils.CreateMultiMaskBy(preShiftAnd, pattern)
+func PreShiftAndMultiMask(pattern *string) *utils.MultiMask {
+	n := utils.NSubPattern(pattern)
+	mask := utils.CreateMultiMask(n)
+	mask.SetDefault(make([]uint, n))
+	for i := 0; i < n; i++ {
+		begin := i * bits.UintSize
+		end := int(math.Min(float64(begin+bits.UintSize), float64(len(*pattern))))
+		sub := (*pattern)[begin:end]
+		for j := 0; j < len(sub); j++ {
+			key := sub[j]
+			index := n - i - 1
+			value := mask.GetSub(key, index)
+			value |= 1 << j
+			mask.SetSub(value, key, index)
+		}
+		if i == n-1 {
+			// We must save the size of the last subpattern
+			mask.SetLastSize(end - begin)
+		}
+	}
+	return mask
 }
 
 func ShiftAndMultiMask(text, pattern string) []int {
 	occ := []int{}
-	mask := PreShiftAndMultiMask(pattern)
-	d := make([]uint, len(mask.Sizes()))
-	var match uint = 1 << ((mask.Sizes())[0] - 1)
+	mask := PreShiftAndMultiMask(&pattern)
+	d := make([]uint, utils.NSubPattern(&pattern))
+	var match uint = 1 << (mask.Size() - 1)
 	for i := 0; i < len(text); i++ {
-		utils.ArrayShift(d, mask.Sizes())
+		utils.ArrayShift(d, mask.Size())
 		utils.ArrayOp(func(i int, arrays ...[]uint) uint {
 			return arrays[0][i] & arrays[1][i]
 		}, d, mask.Get(text[i]))

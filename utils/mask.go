@@ -18,7 +18,7 @@ type Mask struct {
 type MultiMask struct {
 	defaultMask []uint          // default mask for non given symboles
 	masks       map[byte][]uint // mask for given symboles for each pattern
-	sizes       []int           // sizes of the differents masks
+	size        int             // sizes of the last substring
 	// value       bool            // boolean used to create default masks
 }
 
@@ -79,26 +79,22 @@ func (mask *Mask) Keys() []byte {
 }
 
 func CreateMaskBy(prepro func(pattern string) *Mask, pattern string) []*Mask {
-	if len(pattern) > 64 {
-		// computes the number of sub-patterns
-		n := int(math.Ceil(float64(len(pattern)) / bits.UintSize))
-		// creates a slice with n masks
-		masks := make([]*Mask, n)
-		for i := 0; i < n; i++ {
-			// begin corresponds to the first index
-			// of the factor in the pattern
-			begin := i * bits.UintSize
-			// end corresponds to the last index + 1
-			// of the factor in the pattern
-			// it is at most equal to the lengteh of the pattern
-			end := int(math.Min(float64((i+1)*bits.UintSize),
-				float64(len(pattern))))
-			mask := prepro(pattern[begin:end])
-			masks[i] = mask
-		}
-		return masks
+	// computes the number of sub-patterns
+	n := int(math.Ceil(float64(len(pattern)) / bits.UintSize))
+	// creates a slice with n masks
+	masks := make([]*Mask, n)
+	for i := 0; i < n; i++ {
+		// begin corresponds to the first index
+		// of the factor in the pattern
+		begin := i * bits.UintSize
+		// end corresponds to the last index + 1
+		// of the factor in the pattern
+		// it is at most equal to the lengteh of the pattern
+		end := int(math.Min(float64(begin+bits.UintSize), float64(len(pattern))))
+		mask := prepro(pattern[begin:end])
+		masks[i] = mask
 	}
-	return []*Mask{prepro(pattern)}
+	return masks
 }
 
 func (mask *Mask) Resize(size int) {
@@ -110,7 +106,7 @@ func (mask *Mask) Resize(size int) {
 func CreateMultiMask(n int) *MultiMask {
 	var mask MultiMask
 	mask.masks = make(map[byte][]uint)
-	mask.sizes = make([]int, n)
+	mask.size = 0
 	mask.defaultMask = make([]uint, n)
 	return &mask
 }
@@ -157,8 +153,28 @@ func CreateMultiMaskBy(prepro func(pattern string) *Mask, pattern string) *Multi
 	return multimask
 }
 
-func (mask *MultiMask) Sizes() []int {
-	return mask.sizes
+func (mask *MultiMask) Size() int {
+	return mask.size
+}
+
+func (mask *MultiMask) SetDefault(value []uint) {
+	mask.defaultMask = value
+}
+
+func (mask *MultiMask) SetValue(value []uint, key byte) {
+	mask.masks[key] = value
+}
+
+func (mask *MultiMask) SetSub(value uint, key byte, index int) {
+	if _, ok := mask.masks[key]; !ok {
+		mask.masks[key] = make([]uint, len(mask.defaultMask))
+		copy(mask.masks[key], mask.defaultMask)
+	}
+	mask.masks[key][index] = value
+}
+
+func (mask *MultiMask) SetLastSize(size int) {
+	mask.size = size
 }
 
 func (multimask *MultiMask) insertMasks(masks []*Mask, alphabet *Set) {
@@ -169,7 +185,7 @@ func (multimask *MultiMask) insertMasks(masks []*Mask, alphabet *Set) {
 		multimask.defaultMask[i] = mask.Default()
 		// similary we save each size
 		// to be used into the search part
-		multimask.sizes[i] = mask.size
+		// multimask.sizes[i] = mask.size
 		// we must initialise the masks
 		// for each symbol of the alphabet
 		// used for the whole pattern
@@ -196,6 +212,13 @@ func (mask *MultiMask) Get(key byte) []uint {
 		return value
 	}
 	return mask.defaultMask
+}
+
+func (mask *MultiMask) GetSub(key byte, index int) uint {
+	if value, ok := mask.masks[key]; ok {
+		return value[index]
+	}
+	return mask.defaultMask[index]
 }
 
 func (mask *MultiMask) Keys() []byte {

@@ -2,6 +2,8 @@ package tests
 
 import (
 	"math/bits"
+	"os"
+	"strconv"
 	"stringmatching/algo"
 	"stringmatching/utils"
 	"testing"
@@ -85,9 +87,12 @@ func TestMultiShiftAnd(t *testing.T) {
 
 func TestPreMultiMask(t *testing.T) {
 	pattern := "abba"
-	current := algo.PreShiftAndMultiMask(pattern)
-	expectedSize := []int{4}
-	CheckSlice(t, expectedSize, current.Sizes())
+	current := algo.PreShiftAndMultiMask(&pattern)
+	expectedSize := 4
+	if current.Size() != expectedSize {
+		t.Errorf("Size error : expected %d but found %d", expectedSize, current.Size())
+	}
+	CheckSlice(t, []uint{0}, current.Default())
 	expectedKeys := []byte{'a', 'b'}
 	currentKeys := current.Keys()
 	utils.SortSlice(currentKeys)
@@ -108,9 +113,11 @@ func TestPreMultiMaskShiftAnd64(t *testing.T) {
 	for len(pattern) < 68 {
 		pattern += "aaba"
 	}
-	current := algo.PreShiftAndMultiMask(pattern)
-	expectedSizes := []int{4, 64}
-	CheckSlice(t, expectedSizes, current.Sizes())
+	current := algo.PreShiftAndMultiMask(&pattern)
+	expectedSize := 4
+	if current.Size() != expectedSize {
+		t.Errorf("Size error : expected %b but found %b", expectedSize, current.Size())
+	}
 	expectedKeys := []byte{'a', 'b'}
 	currentKeys := current.Keys()
 	utils.SortSlice(currentKeys)
@@ -150,6 +157,106 @@ func BenchmarkBigShiftAndMultiMask(b *testing.B) {
 		pattern += "abbaabba"
 	}
 	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAndMultiMask(text, pattern)
+	}
+}
+
+func BenchmarkMotifEqualText1_5(b *testing.B) {
+	pattern := "aabab"
+	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAnd(text, pattern)
+	}
+}
+
+func BenchmarkMotifEqualText2_5(b *testing.B) {
+	pattern := "aabab"
+	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAndMultiMask(text, pattern)
+	}
+}
+
+func BenchmarkMotifEqualText1_20(b *testing.B) {
+	pattern := "aabab"
+	for len(pattern) != 20 {
+		pattern += "aabab"
+	}
+	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAnd(text, pattern)
+	}
+}
+
+func BenchmarkMotifEqualText2_20(b *testing.B) {
+	pattern := "aabab"
+	for len(pattern) != 20 {
+		pattern += "aabab"
+	}
+	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAndMultiMask(text, pattern)
+	}
+}
+
+func BenchmarkMotifEqualText1_50(b *testing.B) {
+	pattern := utils.WordGenerator([]byte{'a', 'b'}, 50)
+	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAnd(text, pattern)
+	}
+}
+func BenchmarkMotifEqualText2_50(b *testing.B) {
+	pattern := utils.WordGenerator([]byte{'a', 'b'}, 50)
+	text := pattern
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAndMultiMask(text, pattern)
+	}
+}
+
+func benchmarkPatternEqualText1(pattern string, b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAnd(pattern, pattern)
+	}
+}
+
+func benchmarkPatternEqualText2(pattern string, b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAndMultiMask(pattern, pattern)
+	}
+}
+
+func BenchmarkPatternEqualText1(b *testing.B) {
+	l := len(os.Args)
+	alphabetSize, _ := strconv.Atoi(os.Args[l-3])
+	patternSize, _ := strconv.Atoi(os.Args[l-2])
+	textSize, _ := strconv.Atoi(os.Args[l-1])
+	alphabet := utils.AlpahbetGenerator(alphabetSize)
+	pattern := utils.WordGenerator(alphabet, patternSize)
+	var text string
+	if textSize == patternSize {
+		text = pattern
+	} else {
+		text = utils.WordGenerator(alphabet, textSize)
+	}
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAnd(text, pattern)
+	}
+}
+func BenchmarkPatternEqualText2(b *testing.B) {
+	l := len(os.Args)
+	alphabetSize, _ := strconv.Atoi(os.Args[l-3])
+	patternSize, _ := strconv.Atoi(os.Args[l-2])
+	textSize, _ := strconv.Atoi(os.Args[l-1])
+	alphabet := utils.AlpahbetGenerator(alphabetSize)
+	pattern := utils.WordGenerator(alphabet, patternSize)
+	var text string
+	if textSize == patternSize {
+		text = pattern
+	} else {
+		text = utils.WordGenerator(alphabet, textSize)
+	}
 	for i := 0; i < b.N; i++ {
 		algo.ShiftAndMultiMask(text, pattern)
 	}

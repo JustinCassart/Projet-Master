@@ -75,6 +75,7 @@ func sum(nums ...int) int {
 }
 
 func main() {
+
 	// text := "ababaa"
 	// pattern := "abaa"
 	// start := time.Now()
@@ -122,4 +123,5 @@ func main() {
 	var y uint = 1 << 63
 	fmt.Printf("%b\n", y)
 	fmt.Printf("%b\n", y<<1)
+
 }

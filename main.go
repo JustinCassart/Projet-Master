@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 )
 
@@ -74,6 +75,10 @@ func sum(nums ...int) int {
 	return total
 }
 
+func test_test(t int) {
+
+}
+
 func main() {
 
 	// text := "ababaa"
@@ -109,19 +114,64 @@ func main() {
 	// s3 := []int{2, 1}
 	// fmt.Println(check(s1, s2))
 	// fmt.Println(check(s1, s3))
-	arr := make([]int, 5)
-	set(arr, 3, 25)
-	fmt.Println(arr)
-	app(arr, 45)
-	fmt.Println(arr)
-	nums := []int{1, 2, 3}
-	fmt.Println(sum(nums...))
-	fmt.Println(sum(1, 2, 3))
-	var x uint = 1<<64 - 1
-	fmt.Printf("%b\n", x)
-	fmt.Printf("%b\n", (x<<1)|1)
-	var y uint = 1 << 63
-	fmt.Printf("%b\n", y)
-	fmt.Printf("%b\n", y<<1)
-
+	// arr := make([]int, 5)
+	// set(arr, 3, 25)
+	// fmt.Println(arr)
+	// app(arr, 45)
+	// fmt.Println(arr)
+	// nums := []int{1, 2, 3}
+	// fmt.Println(sum(nums...))
+	// fmt.Println(sum(1, 2, 3))
+	// var x uint = 1<<64 - 1
+	// fmt.Printf("%b\n", x)
+	// fmt.Printf("%b\n", (x<<1)|1)
+	// var y uint = 1 << 63
+	// fmt.Printf("%b\n", y)
+	// fmt.Printf("%b\n", y<<1)
+	// arr := [5]int{}
+	// slc := arr[:]
+	// slc[3] = 15
+	// fmt.Println(arr)
+	// fmt.Println(slc)
+	// pt := &arr
+	// fmt.Println(pt)
+	// fmt.Println(reflect.TypeOf(arr))
+	// fmt.Println(reflect.TypeOf(arr[:]))
+	// fmt.Println(reflect.TypeOf(pt))
+	// s2 := new([]int)
+	// fmt.Println(s2)
+	// fmt.Println(reflect.TypeOf(s2))
+	// m := new(utils.Mask)
+	// fmt.Println(m)
+	// fmt.Println(reflect.TypeOf(m))
+	// x := 7
+	// fmt.Printf("x : %b\n", x)
+	// y := x ^ 2
+	// fmt.Printf("y : %b\n", y)
+	// z := 5
+	// fmt.Printf("z : %b\n", z)
+	// z2 := 5 ^ 2
+	// fmt.Printf("z2 : %b\n", z2)
+	// z3 := (z ^ 2) ^ 2
+	// fmt.Printf("z3 : %b\n", z3)
+	// z4 := x &^ 2
+	// fmt.Printf("and not x : %b\n", z4)
+	// z5 := z &^ 2
+	// fmt.Printf("and not z : %b\n", z5)
+	// var v uint
+	// v = ^v
+	// fmt.Printf("final : %b\n", v&^2)
+	// w := v
+	// fmt.Printf("final : %b\n", w&^2)
+	// var c uint = 2
+	// fmt.Printf("final : %b\n", w&(^c))
+	// data, err := ioutil.ReadFile("textes/jules-verne-voyage-au-centre-de-la-terre.txt")
+	// if err != nil {
+	// 	fmt.Println("nop")
+	// }
+	// fmt.Println(data[100:110])
+	fmt.Printf("args : %v\n", os.Args)
+	for _, v := range os.Args {
+		fmt.Println(v)
+	}
 }

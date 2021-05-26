@@ -1,6 +1,0 @@
-goos: linux
-goarch: amd64
-pkg: stringmatching/tests
-BenchmarkPatternEqualText1-8   	    5457	    222814 ns/op	    3953 B/op	      26 allocs/op
-PASS
-ok  	stringmatching/tests	2.154s

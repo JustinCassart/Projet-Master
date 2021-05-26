@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"math"
 	"math/bits"
 )
@@ -78,9 +77,9 @@ func (mask *Mask) Keys() []byte {
 	return keys
 }
 
-func CreateMaskBy(prepro func(pattern string) *Mask, pattern string) []*Mask {
+func CreateMaskBy(prepro func(pattern *string) *Mask, pattern *string) []*Mask {
 	// computes the number of sub-patterns
-	n := int(math.Ceil(float64(len(pattern)) / bits.UintSize))
+	n := int(math.Ceil(float64(len(*pattern)) / bits.UintSize))
 	// creates a slice with n masks
 	masks := make([]*Mask, n)
 	for i := 0; i < n; i++ {
@@ -90,8 +89,9 @@ func CreateMaskBy(prepro func(pattern string) *Mask, pattern string) []*Mask {
 		// end corresponds to the last index + 1
 		// of the factor in the pattern
 		// it is at most equal to the lengteh of the pattern
-		end := int(math.Min(float64(begin+bits.UintSize), float64(len(pattern))))
-		mask := prepro(pattern[begin:end])
+		end := int(math.Min(float64(begin+bits.UintSize), float64(len(*pattern))))
+		sub := (*pattern)[begin:end]
+		mask := prepro(&sub)
 		masks[i] = mask
 	}
 	return masks
@@ -115,39 +115,27 @@ func (mask *MultiMask) Default() []uint {
 	return mask.defaultMask
 }
 
-func CreateMultiMaskBy(prepro func(pattern string) *Mask, pattern string) *MultiMask {
-	if len(pattern) > 64 {
-		// computes the number of sub-patterns
-		n := int(math.Ceil(float64(len(pattern)) / bits.UintSize))
-		multimask := CreateMultiMask(n)
-		alphabet := CreateSet()
-		masks := make([]*Mask, n)
-		for i := 0; i < n; i++ {
-			// begin corresponds to the first index
-			// of the factor in the pattern
-			begin := i * bits.UintSize
-			// end corresponds to the last index + 1
-			// of the factor in the pattern
-			// it is at most equal to the lengteh of the pattern
-			end := int(math.Min(float64((i+1)*bits.UintSize),
-				float64(len(pattern))))
-			mask := prepro(pattern[begin:end])
-			masks[n-i-1] = mask
-			for _, key := range mask.Keys() {
-				alphabet.Add(key)
-			}
-		}
-		multimask.insertMasks(masks, alphabet)
-		return multimask
-	}
-	multimask := CreateMultiMask(1)
-	masks := []*Mask{prepro(pattern)}
-	fmt.Printf("masks : %v\n", masks[0])
-	fmt.Printf("keys : %v\n", masks[0].Keys())
+func CreateMultiMaskBy(prepro func(pattern *string) *Mask, pattern *string) *MultiMask {
+	// computes the number of sub-patterns
+	n := int(math.Ceil(float64(len(*pattern)) / bits.UintSize))
+	multimask := CreateMultiMask(n)
 	alphabet := CreateSet()
-	for _, key := range masks[0].Keys() {
-		fmt.Printf("OK : %c\n", key)
-		alphabet.Add(key)
+	masks := make([]*Mask, n)
+	for i := 0; i < n; i++ {
+		// begin corresponds to the first index
+		// of the factor in the pattern
+		begin := i * bits.UintSize
+		// end corresponds to the last index + 1
+		// of the factor in the pattern
+		// it is at most equal to the lengteh of the pattern
+		end := int(math.Min(float64((i+1)*bits.UintSize),
+			float64(len(*pattern))))
+		sub := (*pattern)[begin:end]
+		mask := prepro(&sub)
+		masks[n-i-1] = mask
+		for _, key := range mask.Keys() {
+			alphabet.Add(key)
+		}
 	}
 	multimask.insertMasks(masks, alphabet)
 	return multimask
@@ -196,6 +184,9 @@ func (multimask *MultiMask) insertMasks(masks []*Mask, alphabet *Set) {
 				multimask.masks[alpha] = make([]uint, len(masks))
 			}
 			multimask.masks[alpha][i] = mask.Default()
+		}
+		if i == 0 {
+			multimask.SetLastSize(mask.size)
 		}
 	}
 	// We can know set the real values

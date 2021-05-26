@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"io/ioutil"
+	"log"
 	"math/bits"
 	"os"
 	"strconv"
@@ -11,7 +13,7 @@ import (
 
 func TestPreAnd(t *testing.T) {
 	pattern := "aaba"
-	currentMask := algo.PreShiftAnd(pattern)
+	currentMask := algo.PreShiftAnd(&pattern)
 	expectedMask := make([]*utils.Mask, 1)
 	expectedMask[0] = utils.CreateMask(false, 4)
 	expectedMask[0].Set('a', 11)
@@ -25,7 +27,7 @@ func TestPreAnd64(t *testing.T) {
 		pattern += "aaaaaaaa"
 	}
 	pattern += "aaba"
-	currentMasks := algo.PreShiftAnd(pattern)
+	currentMasks := algo.PreShiftAnd(&pattern)
 	expectedMasks := make([]*utils.Mask, 2)
 	expectedMasks[0] = utils.CreateMask(false, bits.UintSize)
 	expectedMasks[0].Set('a', 1<<bits.UintSize-1)
@@ -215,18 +217,6 @@ func BenchmarkMotifEqualText2_50(b *testing.B) {
 	}
 }
 
-func benchmarkPatternEqualText1(pattern string, b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAnd(pattern, pattern)
-	}
-}
-
-func benchmarkPatternEqualText2(pattern string, b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAndMultiMask(pattern, pattern)
-	}
-}
-
 func BenchmarkPatternEqualText1(b *testing.B) {
 	l := len(os.Args)
 	alphabetSize, _ := strconv.Atoi(os.Args[l-3])
@@ -257,6 +247,53 @@ func BenchmarkPatternEqualText2(b *testing.B) {
 	} else {
 		text = utils.WordGenerator(alphabet, textSize)
 	}
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAndMultiMask(text, pattern)
+	}
+}
+
+func BenchmarkPre1(b *testing.B) {
+	l := len(os.Args)
+	alphabetSize, _ := strconv.Atoi(os.Args[l-2])
+	patternSize, _ := strconv.Atoi(os.Args[l-1])
+	alphabet := utils.AlpahbetGenerator(alphabetSize)
+	pattern := utils.WordGenerator(alphabet, patternSize)
+	for i := 0; i < b.N; i++ {
+		algo.PreShiftAnd(&pattern)
+	}
+}
+
+func BenchmarkPre2(b *testing.B) {
+	l := len(os.Args)
+	alphabetSize, _ := strconv.Atoi(os.Args[l-2])
+	patternSize, _ := strconv.Atoi(os.Args[l-1])
+	alphabet := utils.AlpahbetGenerator(alphabetSize)
+	pattern := utils.WordGenerator(alphabet, patternSize)
+	for i := 0; i < b.N; i++ {
+		algo.PreShiftAndMultiMask(&pattern)
+	}
+}
+
+func getData(filename string) string {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Print(err)
+	}
+	return string(data)
+}
+
+func BenchmarkShiftAndFonction1(b *testing.B) {
+	l := len(os.Args)
+	pattern := os.Args[l-1]
+	text := getData("../textes/jules-verne-voyage-au-centre-de-la-terre.txt")
+	for i := 0; i < b.N; i++ {
+		algo.ShiftAnd(text, pattern)
+	}
+}
+func BenchmarkShiftAndFonction2(b *testing.B) {
+	l := len(os.Args)
+	pattern := os.Args[l-1]
+	text := getData("../textes/jules-verne-voyage-au-centre-de-la-terre.txt")
 	for i := 0; i < b.N; i++ {
 		algo.ShiftAndMultiMask(text, pattern)
 	}

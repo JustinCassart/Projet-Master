@@ -49,10 +49,10 @@ func SortSlice(array interface{}) {
 // 	}
 // }
 
-func ArrayShift(array []uint, size int) {
-	for i := 0; i < len(array); i++ {
+func ArrayShift(array *[]uint, size int) {
+	for i := 0; i < len(*array); i++ {
 		var max uint = 1 << size
-		state := array[i]
+		state := (*array)[i]
 		state <<= 1
 		if i == 0 {
 			// We must check if the size of the state
@@ -68,22 +68,22 @@ func ArrayShift(array []uint, size int) {
 		} else {
 			// By definition the size of internal word are
 			// equal to the one of a computer word
-			if array[i] >= 1<<(bits.UintSize-1) {
-				array[i-1] |= 1
+			if (*array)[i] >= 1<<(bits.UintSize-1) {
+				(*array)[i-1] |= 1
 			}
 		}
-		if i == len(array)-1 {
+		if i == len(*array)-1 {
 			// We add one in the last position
 			// to do the suppposition of a new occurrence.
 			state |= 1
 		}
-		array[i] = state
+		(*array)[i] = state
 	}
 }
 
-func ArrayOp(operation func(i int, arrays ...[]uint) uint, arrays ...[]uint) {
-	for i := 0; i < len(arrays[0]); i++ {
-		arrays[0][i] = operation(i, arrays...)
+func ArrayOp(operation func(i int, arrays ...*[]uint) uint, arrays ...*[]uint) {
+	for i := 0; i < len(*arrays[0]); i++ {
+		(*arrays[0])[i] = operation(i, arrays...)
 	}
 }
 

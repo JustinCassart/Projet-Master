@@ -12,12 +12,12 @@ import (
 // For example the mask for aaba is
 // B[a] = 1011
 // B[c] = 0010
-func preShiftAnd(pattern string) *utils.Mask {
-	mask := utils.CreateMask(false, len(pattern))
-	for i := 0; i < len(pattern); i++ {
+func preShiftAnd(pattern *string) *utils.Mask {
+	mask := utils.CreateMask(false, len(*pattern))
+	for i := 0; i < len(*pattern); i++ {
 		var value uint = 1 << i
-		value |= mask.Get(pattern[i])
-		mask.Set(pattern[i], value)
+		value |= mask.Get((*pattern)[i])
+		mask.Set((*pattern)[i], value)
 	}
 	return mask
 }
@@ -28,12 +28,12 @@ func preShiftAnd(pattern string) *utils.Mask {
 // then the slice contains the single mask representing the pattern
 // otherwise, the slice contains the mask for each subpattern s
 // such tath the length of s is at most the size of a word
-func PreShiftAnd(pattern string) []*utils.Mask {
+func PreShiftAnd(pattern *string) []*utils.Mask {
 	return utils.CreateMaskBy(preShiftAnd, pattern)
 }
 
 func ShiftAnd(text, pattern string) []int {
-	masks := PreShiftAnd(pattern)
+	masks := PreShiftAnd(&pattern)
 	occ := []int{}
 	var match uint = 1 << (masks[0].Size() - 1)
 	var d uint = 0
@@ -113,7 +113,7 @@ func MultiShiftAnd(text string, patterns []string) [][]int {
 		bigPattern += pattern
 		sizes[i] = len(pattern)
 	}
-	masks := PreShiftAnd(bigPattern)
+	masks := PreShiftAnd(&bigPattern)
 	var init uint  // give where begin a pattern in the concatenation
 	var match uint // tel if a pattern match
 	var d uint     // shift used to construct the init and match sets
@@ -218,10 +218,11 @@ func ShiftAndMultiMask(text, pattern string) []int {
 	d := make([]uint, utils.NSubPattern(&pattern))
 	var match uint = 1 << (mask.Size() - 1)
 	for i := 0; i < len(text); i++ {
-		utils.ArrayShift(d, mask.Size())
-		utils.ArrayOp(func(i int, arrays ...[]uint) uint {
-			return arrays[0][i] & arrays[1][i]
-		}, d, mask.Get(text[i]))
+		utils.ArrayShift(&d, mask.Size())
+		value := mask.Get(text[i])
+		utils.ArrayOp(func(i int, arrays ...*[]uint) uint {
+			return (*arrays[0])[i] & (*arrays[1])[i]
+		}, &d, &value)
 		if d[0]&match != 0 {
 			occ = append(occ, i-len(pattern)+1)
 		}

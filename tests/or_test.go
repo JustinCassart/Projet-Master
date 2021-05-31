@@ -8,7 +8,7 @@ import (
 
 func TestPreOr(t *testing.T) {
 	pattern := "aaba"
-	currentMask := algo.PreShiftOr(pattern)
+	currentMask := algo.PreShiftOr(&pattern)
 	expectedMask := utils.CreateMask(true, 4)
 	expectedMask.Set('a', 4)
 	expectedMask.Set('b', 11)
@@ -24,7 +24,7 @@ func TestPreOr64(t *testing.T) {
 		pattern += "aaaaaaaa"
 	}
 	pattern += "bbb"
-	currentMasks := algo.PreShiftOr(pattern)
+	currentMasks := algo.PreShiftOr(&pattern)
 	expectedMasks := make([]*utils.Mask, 2)
 	expectedMasks[0] = utils.CreateMask(true, 64)
 	expectedMasks[0].Set('a', 0)
@@ -34,20 +34,9 @@ func TestPreOr64(t *testing.T) {
 }
 
 func TestShiftOr(t *testing.T) {
-	patterns := "aaba"
+	pattern := "aaba"
 	texts := "ababaaba"
-	current := algo.ShiftOr(texts, patterns)
+	current := algo.ShiftOr(texts, pattern, algo.PreShiftOr(&pattern))
 	expected := []int{4}
-	CheckSlice(t, current, expected)
-}
-
-func TestMultiShiftOr(t *testing.T) {
-	pattern := "abbaabba"
-	for len(pattern) < 128 {
-		pattern += "abbaabba"
-	}
-	text := pattern
-	current := algo.ShiftOr(text, pattern)
-	expected := []int{0}
 	CheckSlice(t, current, expected)
 }

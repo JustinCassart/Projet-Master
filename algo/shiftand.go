@@ -32,8 +32,7 @@ func PreShiftAnd(pattern *string) []*utils.Mask {
 	return utils.CreateMaskBy(preShiftAnd, pattern)
 }
 
-func ShiftAnd(text, pattern string) []int {
-	masks := PreShiftAnd(&pattern)
+func ShiftAnd(text, pattern string, masks []*utils.Mask) []int {
 	occ := []int{}
 	var match uint = 1 << (masks[0].Size() - 1)
 	var d uint = 0
@@ -43,7 +42,7 @@ func ShiftAnd(text, pattern string) []int {
 			if len(masks) == 1 {
 				occ = append(occ, i-masks[0].Size()+1)
 			} else {
-				if occand(masks, &text, 1, i+1) {
+				if checkocc(masks, &text, 1, i+1, func(match, d uint) bool { return d&match != 0 }) {
 					occ = append(occ, i-masks[0].Size()+1)
 				}
 			}
@@ -56,7 +55,7 @@ func nextStateAnd(mask *utils.Mask, char byte, state *uint) {
 	*state = ((*state << 1) | 1) & mask.Get(char)
 }
 
-func occand(masks []*utils.Mask, text *string, id, begin int) bool {
+func checkocc(masks []*utils.Mask, text *string, id, begin int, check func(match, d uint) bool) bool {
 	if begin >= len(*text) {
 		return false
 	}
@@ -70,69 +69,14 @@ func occand(masks []*utils.Mask, text *string, id, begin int) bool {
 			return false
 		}
 		nextStateAnd(masks[id], (*text)[begin+i], &d)
-		if d&match != 0 {
+		if check(match, d) {
 			if id != len(masks)-1 {
-				return occand(masks, text, id+1, begin+i+1)
+				return checkocc(masks, text, id+1, begin+i+1, check)
 			}
 			return true
 		}
 	}
 	return false
-}
-
-// PreMultiShiftAnd compute the init set
-// and the match set such that if we have a set
-// P = {P1, P2, ..., Pr} of patterns
-// we have init = 0^{mr-1}1 ... 0^{m2-1}1 0^{m1-1}1
-// where mr is the size of the rth pattern
-// reset = 10^{mr-1} ... 10^{m2-1} 10^{m1-1}
-func PreMutliShiftAnd(sizes *[]int, init, match, d *uint) {
-	for _, size := range *sizes {
-		*init += 1 << *d
-		*d += uint(size)
-		*match += 1 << (*d - 1)
-	}
-}
-
-func nextStateMultiAnd(mask *utils.Mask, state, init *uint, char byte) {
-	var max uint = 1 << mask.Size()
-	*state <<= 1
-	if *state >= max {
-		*state ^= max
-	}
-	*state |= *init
-	*state &= mask.Get(char)
-}
-
-// MultiShiftAnd performs the ShiftAnd string matching algorithm
-// for a set of patterns
-func MultiShiftAnd(text string, patterns []string) [][]int {
-	bigPattern := ""
-	sizes := make([]int, len(patterns))
-	for i, pattern := range patterns {
-		bigPattern += pattern
-		sizes[i] = len(pattern)
-	}
-	masks := PreShiftAnd(&bigPattern)
-	var init uint  // give where begin a pattern in the concatenation
-	var match uint // tel if a pattern match
-	var d uint     // shift used to construct the init and match sets
-	PreMutliShiftAnd(&sizes, &init, &match, &d)
-	var state uint                      // state
-	occ := make([][]int, len(patterns)) // occurrences found for each pattern
-	for i := 0; i < len(text); i++ {
-		nextStateMultiAnd(masks[0], &state, &init, text[i])
-		if state&match != 0 {
-			s := 0
-			for pos, size := range sizes {
-				s += size
-				if state&(1<<(s-1)) != 0 {
-					occ[pos] = append(occ[pos], i-size+1)
-				}
-			}
-		}
-	}
-	return occ
 }
 
 func extendedShiftAnd(pattern string, size int, i *int, mask *utils.Mask) {
@@ -212,19 +156,19 @@ func PreShiftAndMultiMask(pattern *string) *utils.MultiMask {
 	return mask
 }
 
-func ShiftAndMultiMask(text, pattern string) []int {
+func ShiftAndMultiMask(text, pattern *string, mask *utils.MultiMask) []int {
 	occ := []int{}
-	mask := PreShiftAndMultiMask(&pattern)
-	d := make([]uint, utils.NSubPattern(&pattern))
+	// mask := PreShiftAndMultiMask(pattern)
+	d := make([]uint, utils.NSubPattern(pattern))
 	var match uint = 1 << (mask.Size() - 1)
-	for i := 0; i < len(text); i++ {
+	for i := 0; i < len(*text); i++ {
 		utils.ArrayShift(&d, mask.Size())
-		value := mask.Get(text[i])
+		value := mask.Get((*text)[i])
 		utils.ArrayOp(func(i int, arrays ...*[]uint) uint {
 			return (*arrays[0])[i] & (*arrays[1])[i]
 		}, &d, &value)
 		if d[0]&match != 0 {
-			occ = append(occ, i-len(pattern)+1)
+			occ = append(occ, i-len(*pattern)+1)
 		}
 	}
 	return occ

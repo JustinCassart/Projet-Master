@@ -64,29 +64,3 @@ func CheckMasks(t *testing.T, expectedMasks, currentMasks []*utils.Mask) {
 		CheckMask(t, expectedMasks[i], currentMasks[i])
 	}
 }
-
-// func CheckMultiMask(t *testing.T, expectedMask, currentMask *utils.MultiMask) {
-// 	if len(*currentMask.Size()) != len(*expectedMask.Size()) {
-// 		t.Errorf("Number of sizes error : Expected %d but found %d", len(*expectedMask.Size()), len(*currentMask.Size()))
-// 	}
-// 	length := len(*currentMask.Size())
-// 	for i := 0; i < length; i++ {
-// 		currentSize := (*currentMask.Size())[i]
-// 		expectedSize := (*expectedMask.Size())[i]
-// 		if currentSize != expectedSize {
-// 			t.Errorf("Expected size %d but found %d", expectedSize, currentSize)
-// 		}
-// 	}
-// 	for _, key := range expectedMask.Keys() {
-// 		currentValueL := currentMask.Get(key)
-// 		expectedValueL := expectedMask.Get(key)
-// 		for i := 0; i < len(expectedValueL); i++ {
-// 			currentValue := currentValueL[i]
-// 			expectedValue := expectedValueL[i]
-// 			if currentValue != expectedValue {
-// 				t.Errorf("Key error %c : Expected %v but found %v", key, expectedValueL, currentValueL)
-// 				break
-// 			}
-// 		}
-// 	}
-// }

@@ -1,7 +1,6 @@
 package algo
 
 import (
-	"fmt"
 	"math"
 	"math/bits"
 	"stringmatching/utils"
@@ -78,60 +77,6 @@ func checkocc(masks []*utils.Mask, text *string, id, begin int, check func(match
 	}
 	return false
 }
-
-func extendedShiftAnd(pattern string, size int, i *int, mask *utils.Mask) {
-	for pattern[*i] != ']' {
-		if pattern[*i] == '-' {
-			fmt.Printf("begin : %c, end : %c\n", pattern[*i-1], pattern[*i+1])
-			begin := pattern[*i-1] + 1
-			end := pattern[*i+1]
-			for c := begin; c <= end; c++ {
-				fmt.Printf("c : %c\n", c)
-				var value uint = 1 << size
-				value |= mask.Get(c)
-				mask.Set(c, value)
-			}
-			*i += 2
-			break
-		}
-		var value uint = 1 << size
-		value |= mask.Get(pattern[*i])
-		mask.Set(pattern[*i], value)
-		*i += 1
-	}
-}
-
-// func gapsShiftAnd(pattern *string, i, initGap, endGap *int, mask *utils.Mask) {
-
-// }
-
-func PreExtendedShiftAnd(pattern *string, initGap, endGap *int) *utils.Mask {
-	mask := utils.CreateMask(false, 0)
-	size := 0
-	for i := 0; i < len(*pattern); i++ {
-		if (*pattern)[i] == '[' {
-			// class of symboles
-			i += 1
-			extendedShiftAnd(*pattern, size, &i, mask)
-		} else if (*pattern)[i] == 'x' && (*pattern)[i+1] == '(' {
-			// gaps
-
-		} else {
-			// simple symbole
-			var value uint = 1 << size
-			value |= mask.Get((*pattern)[i])
-			mask.Set((*pattern)[i], value)
-		}
-		size += 1
-	}
-	mask.Resize(size)
-	return mask
-}
-
-// func ExtendedShiftAnd(text, pattern string) {
-// 	var initGap, endGap int
-// 	mask := PreExtendedShiftAnd(&pattern, &initGap, &endGap)
-// }
 
 func PreShiftAndMultiMask(pattern *string) *utils.MultiMask {
 	n := utils.NSubPattern(pattern)

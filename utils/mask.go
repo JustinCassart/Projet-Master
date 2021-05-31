@@ -62,6 +62,10 @@ func (mask *Mask) Get(key byte) uint {
 	return mask.defaultMask
 }
 
+func (mask *Mask) SetDefault(value uint) {
+	mask.defaultMask = value
+}
+
 // Default returns the default mask
 func (mask *Mask) Default() uint {
 	return mask.defaultMask

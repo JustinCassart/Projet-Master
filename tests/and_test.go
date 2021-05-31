@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/bits"
 	"os"
-	"strconv"
 	"stringmatching/algo"
 	"stringmatching/utils"
 	"testing"
@@ -54,17 +53,6 @@ func TestBigShiftAnd(t *testing.T) {
 	current := algo.ShiftAnd(text, pattern, algo.PreShiftAnd(&pattern))
 	expected := []int{0}
 	CheckSlice(t, expected, current)
-}
-
-func BenchmarkBigShitAnd(b *testing.B) {
-	pattern := "abbaabba"
-	for len(pattern) < 128 {
-		pattern += "abbaabba"
-	}
-	text := pattern
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAnd(text, pattern, algo.PreShiftAnd(&pattern))
-	}
 }
 
 func TestPreMultiMask(t *testing.T) {
@@ -133,127 +121,6 @@ func TestBigShiftAndMultiMask(t *testing.T) {
 	CheckSlice(t, expected, current)
 }
 
-func BenchmarkBigShiftAndMultiMask(b *testing.B) {
-	pattern := "abbaabba"
-	for len(pattern) < 128 {
-		pattern += "abbaabba"
-	}
-	text := pattern
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAndMultiMask(&text, &pattern, algo.PreShiftAndMultiMask(&pattern))
-	}
-}
-
-func BenchmarkMotifEqualText1_5(b *testing.B) {
-	pattern := "aabab"
-	text := pattern
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAnd(text, pattern, algo.PreShiftAnd(&pattern))
-	}
-}
-
-func BenchmarkMotifEqualText2_5(b *testing.B) {
-	pattern := "aabab"
-	text := pattern
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAndMultiMask(&text, &pattern, algo.PreShiftAndMultiMask(&pattern))
-	}
-}
-
-func BenchmarkMotifEqualText1_20(b *testing.B) {
-	pattern := "aabab"
-	for len(pattern) != 20 {
-		pattern += "aabab"
-	}
-	text := pattern
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAnd(text, pattern, algo.PreShiftAnd(&pattern))
-	}
-}
-
-func BenchmarkMotifEqualText2_20(b *testing.B) {
-	pattern := "aabab"
-	for len(pattern) != 20 {
-		pattern += "aabab"
-	}
-	text := pattern
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAndMultiMask(&text, &pattern, algo.PreShiftAndMultiMask(&pattern))
-	}
-}
-
-func BenchmarkMotifEqualText1_50(b *testing.B) {
-	pattern := utils.WordGenerator([]byte{'a', 'b'}, 50)
-	text := pattern
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAnd(text, pattern, algo.PreShiftAnd(&pattern))
-	}
-}
-func BenchmarkMotifEqualText2_50(b *testing.B) {
-	pattern := utils.WordGenerator([]byte{'a', 'b'}, 50)
-	text := pattern
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAndMultiMask(&text, &pattern, algo.PreShiftAndMultiMask(&pattern))
-	}
-}
-
-func BenchmarkPatternEqualText1(b *testing.B) {
-	l := len(os.Args)
-	alphabetSize, _ := strconv.Atoi(os.Args[l-3])
-	patternSize, _ := strconv.Atoi(os.Args[l-2])
-	textSize, _ := strconv.Atoi(os.Args[l-1])
-	alphabet := utils.AlpahbetGenerator(alphabetSize)
-	pattern := utils.WordGenerator(alphabet, patternSize)
-	var text string
-	if textSize == patternSize {
-		text = pattern
-	} else {
-		text = utils.WordGenerator(alphabet, textSize)
-	}
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAnd(text, pattern, algo.PreShiftAnd(&pattern))
-	}
-}
-func BenchmarkPatternEqualText2(b *testing.B) {
-	l := len(os.Args)
-	alphabetSize, _ := strconv.Atoi(os.Args[l-3])
-	patternSize, _ := strconv.Atoi(os.Args[l-2])
-	textSize, _ := strconv.Atoi(os.Args[l-1])
-	alphabet := utils.AlpahbetGenerator(alphabetSize)
-	pattern := utils.WordGenerator(alphabet, patternSize)
-	var text string
-	if textSize == patternSize {
-		text = pattern
-	} else {
-		text = utils.WordGenerator(alphabet, textSize)
-	}
-	for i := 0; i < b.N; i++ {
-		algo.ShiftAndMultiMask(&text, &pattern, algo.PreShiftAndMultiMask(&pattern))
-	}
-}
-
-func BenchmarkPre1(b *testing.B) {
-	l := len(os.Args)
-	alphabetSize, _ := strconv.Atoi(os.Args[l-2])
-	patternSize, _ := strconv.Atoi(os.Args[l-1])
-	alphabet := utils.AlpahbetGenerator(alphabetSize)
-	pattern := utils.WordGenerator(alphabet, patternSize)
-	for i := 0; i < b.N; i++ {
-		algo.PreShiftAnd(&pattern)
-	}
-}
-
-func BenchmarkPre2(b *testing.B) {
-	l := len(os.Args)
-	alphabetSize, _ := strconv.Atoi(os.Args[l-2])
-	patternSize, _ := strconv.Atoi(os.Args[l-1])
-	alphabet := utils.AlpahbetGenerator(alphabetSize)
-	pattern := utils.WordGenerator(alphabet, patternSize)
-	for i := 0; i < b.N; i++ {
-		algo.PreShiftAndMultiMask(&pattern)
-	}
-}
-
 func getData(filename string) string {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -295,16 +162,3 @@ func BenchmarkShiftAndFunction2(b *testing.B) {
 		algo.ShiftAndMultiMask(&text, &pattern, mask)
 	}
 }
-
-// func TestPreClassesShiftAnd(t *testing.T) {
-// 	pattern := "[123]/[1-3]/199[89]"
-// 	current := algo.PreClassesShiftAnd(pattern)
-// 	expected := utils.CreateMask(false, 8)
-// 	expected.Set('1', 21)
-// 	expected.Set('2', 5)
-// 	expected.Set('3', 5)
-// 	expected.Set('8', 128)
-// 	expected.Set('9', 224)
-// 	expected.Set('/', 10)
-// 	CheckMask(t, expected, current)
-// }

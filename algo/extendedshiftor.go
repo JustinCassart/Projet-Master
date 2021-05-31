@@ -39,8 +39,12 @@ func preExtendedShiftOrClasses(pattern *string, i, pos int, mask *utils.Mask) in
 	}
 }
 
+// PreExtendedShiftAnd computes the preprocessing
+// for the ExtendedShiftAnd algorithm
+// It returns the masks maskB, maskR, I, F, O and the number of classes
 func PreExtendedShiftOr(pattern *string) (*utils.Mask, *utils.Mask, uint, uint, uint, int) {
 	size := 0
+	// computes the number of classes
 	for i := 0; i < len(*pattern); i++ {
 		if (*pattern)[i] == '[' {
 			size += 1
@@ -83,6 +87,9 @@ func PreExtendedShiftOr(pattern *string) (*utils.Mask, *utils.Mask, uint, uint, 
 	return maskB, maskR, I, F, O, size
 }
 
+// ExtendedShiftOr finds all instances of
+// a pattern with classes, optionnals and repeated symbols
+// using the extendedShiftOr algorithm
 func ExtendedShiftOr(pattern, text string) []int {
 	maskB, maskR, I, F, O, size := PreExtendedShiftOr(&pattern)
 	occ := []int{}

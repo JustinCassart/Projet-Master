@@ -1,5 +1,7 @@
 package algo
 
+// PreMultiShiftOr computes the init and final masks
+// for the multi-shift-or algorithm
 func PreMultiShiftOr(sizes *[]int, init, final *uint) {
 	t := 0
 	for _, size := range *sizes {
@@ -9,6 +11,8 @@ func PreMultiShiftOr(sizes *[]int, init, final *uint) {
 	}
 }
 
+// MultiShiftOr finds all instances of a set of patterns
+// using the multi-shift-or algorithm
 func MultiShiftOr(text string, patterns []string) [][]int {
 	occ := make([][]int, len(patterns))
 	sizes, bigPattern := bigPattern(&patterns)

@@ -23,7 +23,7 @@ func PreKMP(pattern string) []int {
 	return next
 }
 
-// KMP finds all occurrence
+// KMP finds all instances
 // of a pattern in a text
 // using the knuth, Morris and Pratt's algorithm
 func KMP(text, pattern string) []int {

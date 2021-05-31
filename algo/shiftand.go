@@ -26,11 +26,13 @@ func preShiftAnd(pattern *string) *utils.Mask {
 // If the length of the pattern is less or equal than the size of a word
 // then the slice contains the single mask representing the pattern
 // otherwise, the slice contains the mask for each subpattern s
-// such tath the length of s is at most the size of a word
+// such that the length of s is at most the size of a computer word
 func PreShiftAnd(pattern *string) []*utils.Mask {
 	return utils.CreateMaskBy(preShiftAnd, pattern)
 }
 
+// ShiftAnd finds all instances of a pattern of any length
+// using the shift-and algorithm and a slice of masks
 func ShiftAnd(text, pattern string, masks []*utils.Mask) []int {
 	occ := []int{}
 	var match uint = 1 << (masks[0].Size() - 1)
@@ -39,8 +41,12 @@ func ShiftAnd(text, pattern string, masks []*utils.Mask) []int {
 		nextStateAnd(masks[0], text[i], &d)
 		if d&match != 0 {
 			if len(masks) == 1 {
+				// there is only one mask
+				// so the instance found is a real instance
 				occ = append(occ, i-masks[0].Size()+1)
 			} else {
+				// in this cas we check if the others patterns
+				// confirm the instance found
 				if checkocc(masks, &text, 1, i+1, func(match, d uint) bool { return d&match != 0 }) {
 					occ = append(occ, i-masks[0].Size()+1)
 				}
@@ -54,6 +60,7 @@ func nextStateAnd(mask *utils.Mask, char byte, state *uint) {
 	*state = ((*state << 1) | 1) & mask.Get(char)
 }
 
+// checkocc checks if the instance found is a real instance
 func checkocc(masks []*utils.Mask, text *string, id, begin int, check func(match, d uint) bool) bool {
 	if begin >= len(*text) {
 		return false
@@ -78,6 +85,8 @@ func checkocc(masks []*utils.Mask, text *string, id, begin int, check func(match
 	return false
 }
 
+// PreShiftAndMultiMask computes the MultiMask for
+// the ShiftAnd algorithm
 func PreShiftAndMultiMask(pattern *string) *utils.MultiMask {
 	n := utils.NSubPattern(pattern)
 	mask := utils.CreateMultiMask(n)
@@ -101,9 +110,10 @@ func PreShiftAndMultiMask(pattern *string) *utils.MultiMask {
 	return mask
 }
 
+// ShiftAndMultiMask finds all instances of a pattern
+// using a multimask
 func ShiftAndMultiMask(text, pattern *string, mask *utils.MultiMask) []int {
 	occ := []int{}
-	// mask := PreShiftAndMultiMask(pattern)
 	d := make([]uint, utils.NSubPattern(pattern))
 	var match uint = 1 << (mask.Size() - 1)
 	for i := 0; i < len(*text); i++ {

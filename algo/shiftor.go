@@ -4,8 +4,9 @@ import (
 	"stringmatching/utils"
 )
 
-// compute the masks for a string
-// such that its length is equal or lower than 64
+// preshiftOr computes the mask for a string
+// such that its length is equal or lower than
+// the size of a computer word
 func preShiftOr(pattern *string) *utils.Mask {
 	mask := utils.CreateMask(true, len(*pattern))
 	for i := 0; i < len(*pattern); i++ {
@@ -17,8 +18,8 @@ func preShiftOr(pattern *string) *utils.Mask {
 }
 
 // PreShiftOr computes the masks for the pattern
-// It returns a slice of mask
-// If the length of the pattern is less or equal than 64
+// It returns a slice of masks
+// If the length of the pattern is less or equal than a computer word one
 // then the slice contains the single mask representing the pattern
 // otherwise, the slice contains the mask for each subpattern s
 // such tath the length of s is at most 64

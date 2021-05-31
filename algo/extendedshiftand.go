@@ -4,6 +4,8 @@ import (
 	"stringmatching/utils"
 )
 
+// preExtendedShiftAndClasses updates values for a given mask
+// for a single symbol or for each symbol in a class
 func preExtendedShiftAndClasses(pattern *string, i, pos int, mask *utils.Mask) int {
 	if (*pattern)[i] == '[' {
 		// it is a class of symboles
@@ -39,6 +41,8 @@ func preExtendedShiftAndClasses(pattern *string, i, pos int, mask *utils.Mask) i
 	}
 }
 
+// nextIsOptionnal checks if the next symbol
+// or the next class is optionnal
 func nextIsOptionnal(pattern *string, i int) bool {
 	if (*pattern)[i+2] == '?' || (*pattern)[i+2] == '*' {
 		return true
@@ -56,7 +60,7 @@ func nextIsOptionnal(pattern *string, i int) bool {
 
 // PreExtendedShiftAnd computes the preprocessing
 // for the ExtendedShiftAnd algorithm
-// It returns the masks maskB, maskR, I, F and O
+// It returns the masks maskB, maskR, I, F, O and the number of symbols and classes
 func PreExtendedShiftAnd(pattern *string) (*utils.Mask, *utils.Mask, uint, uint, uint, int) {
 	maskB := utils.CreateMask(false, 0)
 	maskR := utils.CreateMask(false, 0)
@@ -90,6 +94,8 @@ func PreExtendedShiftAnd(pattern *string) (*utils.Mask, *utils.Mask, uint, uint,
 	return maskB, maskR, I, F, O, pos
 }
 
+// ExtendedShiftAnd finds all instances of
+// a pattern with classes, optionnals and repeated symbols
 func ExtendedShiftAnd(pattern, text string) []int {
 	maskB, maskR, I, F, O, size := PreExtendedShiftAnd(&pattern)
 	occ := []int{}

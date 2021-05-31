@@ -1,6 +1,6 @@
 package algo
 
-// PreMultiShiftAnd compute the init set
+// PreMultiShiftAnd computes the init set
 // and the match set such that if we have a set
 // P = {P1, P2, ..., Pr} of patterns
 // we have init = 0^{mr-1}1 ... 0^{m2-1}1 0^{m1-1}1
@@ -15,6 +15,8 @@ func PreMultiShiftAnd(sizes *[]int, init, final *uint) {
 	}
 }
 
+// bigPattern concatenates all the patterns in one
+// and creates the list with their sizes
 func bigPattern(patterns *[]string) ([]int, string) {
 	bigPattern := ""
 	sizes := make([]int, len(*patterns))

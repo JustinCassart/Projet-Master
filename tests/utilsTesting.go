@@ -32,7 +32,6 @@ func CheckTable(t *testing.T, expectedTable, currentTable [][]int) {
 		t.Errorf("Table size error : expected %d but found %d", len(expectedTable), len(currentTable))
 	}
 	for i := 0; i < len(expectedTable); i++ {
-		t.Logf("expectedSlice %v currentSlice %v", expectedTable[i], currentTable[i])
 		CheckSlice(t, expectedTable[i], currentTable[i])
 	}
 }
